@@ -222,11 +222,6 @@ public class ChooserBrowseFragment extends Fragment implements LoaderManager.Loa
             }
             item.thumbnail.setImageDrawable(null);
 
-            //Crop the bottom
-            if (!isLegacyTheme) {
-                item.thumbnail.setScaleType(ScaleType.MATRIX);
-            }
-
             if (item.thumbnail.getTag() != null) {
                 LoadImage loadImageTask = new LoadImage(item.thumbnail, isLegacyTheme, false, pkgName);
                 loadImageTask.execute();
@@ -406,7 +401,8 @@ public class ChooserBrowseFragment extends Fragment implements LoaderManager.Loa
             List<IconInfo> icons = new ArrayList<IconInfo>();
             IconPreviewHelper helper = new IconPreviewHelper(mContext, mPkgName);
 
-            for (ComponentName component : WallpaperAndIconPreviewFragment.ICON_COMPONENTS) {
+            for (ComponentName component
+                    : WallpaperAndIconPreviewFragment.getIconComponents(mContext)) {
                 Drawable icon = helper.getIcon(component);
                 IconInfo info = new IconInfo(null, icon);
                 icons.add(info);
