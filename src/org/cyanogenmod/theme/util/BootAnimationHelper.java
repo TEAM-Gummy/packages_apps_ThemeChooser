@@ -17,6 +17,7 @@ package org.cyanogenmod.theme.util;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.res.CustomTheme;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -136,7 +137,7 @@ public class BootAnimationHelper {
         List<AnimationPart> animationParts = new ArrayList<AnimationPart>();
         while ((line = reader.readLine()) != null) {
             String[] info = line.split(" ");
-            if (info.length == 4 && info[0].equals("p")) {
+            if (info.length == 4 && (info[0].equals("p") || info[0].equals("c"))) {
                 int playCount = Integer.parseInt(info[1]);
                 int pause = Integer.parseInt(info[2]);
                 String name = info[3];
@@ -207,7 +208,7 @@ public class BootAnimationHelper {
             String previewName = null;
             // this is ugly, ugly, ugly.  Did I mention this is ugly?
             try {
-                if ("default".equals(path)) {
+                if (CustomTheme.HOLO_DEFAULT.equals(path)) {
                     previewName = getPreviewFrameEntryName(
                             new FileInputStream(SYSTEM_BOOT_ANI_PATH));
                     bitmap = loadPreviewFrame(
