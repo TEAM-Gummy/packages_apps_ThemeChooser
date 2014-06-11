@@ -20,7 +20,7 @@
   <string name="lock_screen">Imagem do ecrã de bloqueio</string>
   <string name="icons">Ícones</string>
   <string name="fonts">Tipos de letra</string>
-  <string name="wallpapers">Papéis de parede</string>
+  <string name="wallpapers">Imagens de fundo</string>
   <string name="boot_anims">Animações de inicialização</string>
   <string name="ringtones">Toques</string>
   <string name="notifications">Notificações</string>
@@ -36,7 +36,7 @@
   <string name="ringtone_label">Toque</string>
   <string name="unknown_author">Autor desconhecido</string>
   <string name="font_preview_letters">AaBbCcDd123</string>
-  <string name="no_boot_animation_preview">Sem pré-visualização disponível</string>
+  <string name="no_preview_available">Sem pré-visualização disponível</string>
   <string name="theme_installed_notification_title">%s instalado</string>
   <string name="theme_installed_notification_text">Tema instalado com êxito.</string>
 </resources>
