@@ -20,6 +20,8 @@ import java.util.List;
 
 import android.content.res.CustomTheme;
 
+import android.graphics.Color;
+import android.view.Gravity;
 import org.cyanogenmod.theme.chooser.WallpaperAndIconPreviewFragment.IconInfo;
 import org.cyanogenmod.theme.util.BootAnimationHelper;
 import org.cyanogenmod.theme.util.IconPreviewHelper;
@@ -434,24 +436,30 @@ public class ChooserBrowseFragment extends Fragment
         }
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mIconViewGroup.removeAllViews();
+        }
+
+        @Override
         protected void onPostExecute(List<IconInfo> icons) {
             if (!mIconViewGroup.getTag().toString().equals(mPkgName) || icons == null) {
                 return;
             }
 
-            mIconViewGroup.removeAllViews();
             for (IconInfo info : icons) {
                 LinearLayout.LayoutParams lparams = new LinearLayout.LayoutParams(0,
-                        LayoutParams.WRAP_CONTENT);
+                        LayoutParams.WRAP_CONTENT, 1f);
                 lparams.weight = 1f / icons.size();
-                ImageView imageView = new ImageView(mContext);
-                int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                       8, mContext.getResources().getDisplayMetrics());
-                imageView.setPadding(padding, 0, padding, 0);
-                imageView.setLayoutParams(lparams);
-                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                imageView.setImageDrawable(info.icon);
-                mIconViewGroup.addView(imageView);
+
+                // Sizes of composed icons differ in size from other icons when using
+                // ImageView.  Using a TextView like in WallpaperAndIconPreviewFragment
+                // displays the icons as the correct size.
+                TextView tv = new TextView(mContext);
+                tv.setGravity(Gravity.CENTER_HORIZONTAL);
+                tv.setLayoutParams(lparams);
+                tv.setCompoundDrawables(null, info.icon, null, null);
+                mIconViewGroup.addView(tv);
             }
         }
     }
