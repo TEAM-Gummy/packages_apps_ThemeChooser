@@ -15,24 +15,19 @@
  */
 package org.cyanogenmod.theme.chooser;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import android.content.res.CustomTheme;
-
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.graphics.Color;
 import android.view.Gravity;
-import org.cyanogenmod.theme.chooser.WallpaperAndIconPreviewFragment.IconInfo;
-import org.cyanogenmod.theme.util.BootAnimationHelper;
-import org.cyanogenmod.theme.util.IconPreviewHelper;
-import org.cyanogenmod.theme.util.ThemedTypefaceHelper;
-import org.cyanogenmod.theme.util.Utils;
-
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
+import android.content.res.CustomTheme;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -41,6 +36,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Browser;
 import android.provider.ThemesContract.ThemesColumns;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -52,22 +48,43 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.webkit.URLUtil;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import org.cyanogenmod.theme.chooser.WallpaperAndIconPreviewFragment.IconInfo;
+import org.cyanogenmod.theme.util.BootAnimationHelper;
+import org.cyanogenmod.theme.util.IconPreviewHelper;
+import org.cyanogenmod.theme.util.ThemedTypefaceHelper;
+import org.cyanogenmod.theme.util.Utils;
+
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChooserBrowseFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String TAG = ChooserBrowseFragment.class.getCanonicalName();
     public static final String DEFAULT = CustomTheme.HOLO_DEFAULT;
+
+    private static final String THEME_STORE_PACKAGE_NAME = "com.cyngn.theme.store";
+    private static final String GET_THEMES_URL =
+            "http://wiki.cyanogenmod.org/w/Get_Themes?action=render";
+    private static final String THEME_STORE_ACTIVITY = "com.cyngn.theme.store.StoreActivity";
 
     public ListView mListView;
     public LocalPagerAdapter mAdapter;
@@ -109,6 +126,99 @@ public class ChooserBrowseFragment extends Fragment
         mMaxImageSize.y  = (int) getActivity().getResources().getDimension(R.dimen.item_browse_height);
 
         return v;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.chooser_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.get_more_themes:
+                if (isThemeStoreInstalled()) {
+                    try {
+                        launchThemeStore();
+                    } catch (ActivityNotFoundException e) {
+                        launchGetThemesWebView();
+                    }
+                } else {
+                    launchGetThemesWebView();
+                }
+                return true;
+        }
+
+        return false;
+    }
+
+    private boolean isThemeStoreInstalled() {
+        PackageManager pm = getActivity().getPackageManager();
+        try {
+            pm.getPackageInfo(THEME_STORE_PACKAGE_NAME, PackageManager.GET_ACTIVITIES);
+            return true;
+        } catch (NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    private void launchThemeStore() {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName(THEME_STORE_PACKAGE_NAME,
+                THEME_STORE_ACTIVITY));
+        getActivity().startActivity(intent);
+    }
+
+    private void launchGetThemesWebView() {
+        Context context = getActivity();
+        if (context == null) return;
+
+        final WebView webView = new WebView(context);
+        String html = createGetThemesHtml(context);
+        webView.loadData(html.toString(), "text/html", null);
+
+        // Setup the dialog
+        AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+        alert.setView(webView);
+        Dialog dialog = alert.create();
+        dialog.show();
+    }
+
+    private String createGetThemesHtml(Context context) {
+        // Setup the webview with progress bar
+        StringBuffer sb = new StringBuffer();
+        sb.append("<html><body>");
+        sb.append(getActivity().getString(R.string.get_more_description));
+        sb.append("<ul>");
+
+        String[] entryNames = context.getResources().getStringArray(R.array.get_more_entry_names);
+        String[] entryUrls = context.getResources().getStringArray(R.array.get_more_entry_urls);
+        for(int i=0; i < entryNames.length; i++) {
+            String name = entryNames[i];
+            String url = entryUrls[i];
+            appendLink(sb, name, url);
+        }
+
+        sb.append("</ul>");
+        sb.append("</body></html>");
+        return sb.toString();
+    }
+
+    private void appendLink(StringBuffer sb, String name, String url) {
+        Context context = getActivity();
+        sb.append("<li>");
+        sb.append("<a href=\"");
+        sb.append(url);
+        sb.append("\">");
+        sb.append(name);
+        sb.append("</a>");
+        sb.append("</li>");
     }
 
     @Override
