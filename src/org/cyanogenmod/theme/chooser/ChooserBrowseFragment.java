@@ -27,7 +27,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
-import android.content.res.CustomTheme;
+import android.content.res.ThemeConfig;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -74,12 +74,13 @@ import org.cyanogenmod.theme.util.Utils;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ChooserBrowseFragment extends Fragment
         implements LoaderManager.LoaderCallbacks<Cursor> {
     public static final String TAG = ChooserBrowseFragment.class.getCanonicalName();
-    public static final String DEFAULT = CustomTheme.HOLO_DEFAULT;
+    public static final String DEFAULT = ThemeConfig.HOLO_DEFAULT;
 
     private static final String THEME_STORE_PACKAGE_NAME = "com.cyngn.theme.store";
     private static final String GET_THEMES_URL =
@@ -265,6 +266,8 @@ public class ChooserBrowseFragment extends Fragment
     public class LocalPagerAdapter extends CursorAdapter {
         List<String> mFilters;
         Context mContext;
+        HashMap<String, ThemedTypefaceHelper> mTypefaceHelpers =
+                new HashMap<String, ThemedTypefaceHelper>();
 
         public LocalPagerAdapter(Context context, Cursor c, List<String> filters) {
             super(context, c, 0);
@@ -377,8 +380,14 @@ public class ChooserBrowseFragment extends Fragment
 
         public void bindFontView(View view, Context context, String pkgName) {
             FontItemHolder item = (FontItemHolder) view.getTag();
-            ThemedTypefaceHelper helper = new ThemedTypefaceHelper();
-            helper.load(mContext, pkgName);
+            ThemedTypefaceHelper helper;
+            if (!mTypefaceHelpers.containsKey(pkgName)) {
+                helper = new ThemedTypefaceHelper();
+                helper.load(mContext, pkgName);
+                mTypefaceHelpers.put(pkgName, helper);
+            } else {
+                helper = mTypefaceHelpers.get(pkgName);
+            }
             Typeface typefaceNormal = helper.getTypeface(Typeface.NORMAL);
             Typeface typefaceBold = helper.getTypeface(Typeface.BOLD);
             item.textView.setTypeface(typefaceNormal);
